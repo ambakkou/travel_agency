@@ -1,31 +1,25 @@
 package fr.lernejo.travelsite;
-
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Objects;
 
 @RestController
 public class Controller {
-
-    final ArrayList<Registry> registration =  new ArrayList<>();
+    final ServiceApi serviceApi;
+    public Controller(ServiceApi serviceApi) {
+        this.serviceApi = serviceApi;
+    }
 
     @PostMapping(value = "/api/inscription")
-    public ArrayList<Registry> register(@RequestBody Registry registry){
-        registration.add(registry);
-        return registration;
+    public ResponseEntity<HttpStatus> register(@RequestBody Registry registry){
+        this.serviceApi.register(registry);
+        return ResponseEntity.ok(HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/travels")
-    public ArrayList<Country> getDestinations(@RequestParam String userName){
-        ArrayList<Country> countries = new ArrayList<>();
-        countries.add(new Country("Caribbean",32.4));
-        countries.add(new Country("Australia",35.1));
-        for(Registry registry:registration){
-            if(registry.userName().equals(userName)){
-                return countries;
-            }
-        }
-        return new ArrayList<Country>();
+    @ResponseBody
+    public Object getDestinations(@RequestParam String userName) {
+        return serviceApi.getDestinations(userName);
     }
 }

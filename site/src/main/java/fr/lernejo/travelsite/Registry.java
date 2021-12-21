@@ -9,4 +9,8 @@ public record Registry(String userEmail, String userName, String userCountry, We
         this.weatherExpectation = weatherExpectation;
         this.minimumTemperatureDistance = minimumTemperatureDistance;
     }
+
+    public Registry() {
+        this(null,null,null,null,1);
+    }
 }
