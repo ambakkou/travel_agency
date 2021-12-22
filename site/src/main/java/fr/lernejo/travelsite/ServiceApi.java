@@ -2,6 +2,7 @@ package fr.lernejo.travelsite;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
@@ -31,35 +32,43 @@ public class ServiceApi {
 
     public ArrayList<Registry> register(Registry registry){
         for(Registry reg: registration){
-            if(registry.userName().equals(reg.userName())){
-                registration.add(registration.indexOf(reg),registry);
+            if(registry.userName.equals(reg.userName)){
+                registration.remove(reg);
+                registration.add(registry);
                 return registration;
-            }
-        }
+            }}
         registration.add(registry);
         return registration;
     }
 
-    public ArrayList<Country> getCountries(int temperature, WeatherExpectation weatherExpectation, String livingCountry) {
-        ArrayList<Country> countriesSug = new ArrayList<>();
+    private double getCountryTemperature(String country){
+        double res = -999;
         DecimalFormat df = new DecimalFormat("#.##", new DecimalFormatSymbols(Locale.ENGLISH));
-        for(String country: this.countries){
-            try {Response<Temperatures> result = predictionEngineClient.listTemperatures(country).execute();
-                if (result.isSuccessful()){
-                    Number mean = Float.parseFloat(df.format((result.body().temperatures().get(0).temperature().floatValue() + result.body().temperatures().get(1).temperature().floatValue())/2));
-                    if(!country.equals(livingCountry)){
-                        if(weatherExpectation.equals(WeatherExpectation.COLDER) && mean.intValue() < temperature)
-                            countriesSug.add(new Country(country, mean));
-                        else if(weatherExpectation.equals(WeatherExpectation.WARMER) && mean.intValue() > temperature)
-                            countriesSug.add(new Country(country, mean));}}
+        try {Call<Temperatures> call = predictionEngineClient.listTemperatures(country);
+            if (call != null){
+                Response<Temperatures> result = call.execute();
+                Temperatures body = result.body();
+                if ((result.isSuccessful()) && (body !=null && body.country.equals(country))){
+                    res = Double.parseDouble(df.format((body.temperatures.get(0).temperature + body.temperatures.get(1).temperature)/2));}}
             } catch (IOException e) {}
-        }
-        return countriesSug;
+        return res;
     }
+
+    private ArrayList<Country> getCountries(int temperature, WeatherExpectation weatherExpectation, String livingCountry) {
+        ArrayList<Country> countriesSug = new ArrayList<>();
+        double home = getCountryTemperature(livingCountry);
+        double diff = weatherExpectation.equals(WeatherExpectation.WARMER) ? temperature + home : home - temperature;
+        for(String country: this.countries){
+            if(!country.equals(livingCountry)){
+                double mean = getCountryTemperature(country);
+                if(mean != -999){
+                    if((weatherExpectation.equals(WeatherExpectation.COLDER) && mean <= diff) || (weatherExpectation.equals(WeatherExpectation.WARMER) && mean >= diff))
+                        countriesSug.add(new Country(country, mean));}}}
+        return countriesSug;}
 
     private Registry findUser(String userName){
         for (Registry registry : registration) {
-            if (registry.userName().equals(userName))
+            if (registry.userName.equals(userName))
                 return registry;
         }
         return null;
@@ -68,7 +77,7 @@ public class ServiceApi {
     public Object getDestinations(String userName) {
         Registry registry = findUser(userName);
         if(registry != null){
-                return getCountries(registry.minimumTemperatureDistance(),registry.weatherExpectation(),registry.userCountry());
+                return getCountries(registry.minimumTemperatureDistance,registry.weatherExpectation,registry.userCountry);
             }
         else
             return ResponseEntity.status(417).body("Unknown username (CODE 417)");

@@ -1,13 +1,16 @@
 package fr.lernejo.travelsite;
 
-public record Country(String country, Number temperature) {
+public class Country {
+    public final String country;
+    public final double temperature;
 
-    public Country(String country, Number temperature) {
+    public Country(String country, double temperature) {
         this.country = country;
         this.temperature = temperature;
     }
 
     public Country() {
-        this(null,1);
+        this.country = null;
+        this.temperature = 1;
     }
 }

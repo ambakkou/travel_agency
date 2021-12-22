@@ -1,6 +1,11 @@
 package fr.lernejo.travelsite;
 
-public record Registry(String userEmail, String userName, String userCountry, WeatherExpectation weatherExpectation, int minimumTemperatureDistance) {
+public class Registry {
+    public final String userEmail;
+    public final String userName;
+    public final String userCountry;
+    public final WeatherExpectation weatherExpectation;
+    public final int minimumTemperatureDistance;
 
     public Registry(String userEmail, String userName, String userCountry, WeatherExpectation weatherExpectation, int minimumTemperatureDistance) {
         this.userEmail = userEmail;
@@ -11,6 +16,10 @@ public record Registry(String userEmail, String userName, String userCountry, We
     }
 
     public Registry() {
-        this(null,null,null,null,1);
+        this.userEmail = null;
+        this.userName = null;
+        this.userCountry = null;
+        this.weatherExpectation = null;
+        this.minimumTemperatureDistance = 1;
     }
 }

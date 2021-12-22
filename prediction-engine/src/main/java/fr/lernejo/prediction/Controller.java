@@ -10,18 +10,25 @@ import java.util.ArrayList;
 
 @RestController
 public class Controller {
-    final TemperatureService temperatureService = new TemperatureService();
+    
+    private Temperatures getCountryTemperature(String country) throws UnknownCountryException{
+        TemperatureService temperatureService = new TemperatureService();
+        ArrayList<Temperature> temperatures = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+        Temperature temp1 = new Temperature(now.toString(), temperatureService.getTemperature(country));
+        Temperature temp2 = new Temperature(now.minusDays(1).toString(), temperatureService.getTemperature(country));
+        temperatures.add(temp1);
+        temperatures.add(temp2);
+        return new Temperatures(country, temperatures);
+    }
 
     @GetMapping(value = "/api/temperature")
-    public Object getTemperature(@RequestParam String country){
-        Temperatures temperatures = new Temperatures(country,new ArrayList<Temperature>());
-        LocalDate now = LocalDate.now();
+    public Object requestCountryTemperature(@RequestParam String country){
         try {
-            temperatures.temperatures().add(new Temperature(now.minusDays(1).toString(),temperatureService.getTemperature(country)));
-            temperatures.temperatures().add(new Temperature(now.minusDays(2).toString(),temperatureService.getTemperature(country)));
-        }catch (UnknownCountryException e){
+            return getCountryTemperature(country);
+        }
+        catch (UnknownCountryException e){
             return ResponseEntity.status(417).body("Unknown country (CODE 417)");
         }
-        return temperatures;
     }
 }
